@@ -314,7 +314,7 @@ def he3_opacity_from_beam_data(
     :py:func:`he3_opacity_from_cell_params`.
     """
     raise NotImplementedError()
-    return He3Opacity[Cell]()
+    return He3Opacity[Cell](1)
 
 
 def he3_polarization(
