@@ -351,6 +351,15 @@ def he3_polarization(
     # Do this at 1AA, or just for all wavelength?
     # Would it be better to (i) take a mean popt for all wavelength, or (ii) compute it just for one wavelength, or (iii) have single parameters for all wavelength?
     # Maybe can use reduce_dims=['wavelength'] of the scipp.curve_fit (see example)
+    """
+    reduce_dims (Sequence[str], default: ()) 
+    --> Additional dimensions to aggregate while fitting. 
+    If a dimension is not in reduce_dims, or in the dimensions of the coords used in the fit, 
+    then the values of the optimal parameters will depend on that dimension. 
+    ne fit will be performed for every slice, and the data arrays in the output will have the dimension in their dims. 
+    If a dimension is passed to reduce_dims all data in that dimension is instead aggregated in a single fit 
+    and the dimension will not be present in the output.
+    """
 
     raise NotImplementedError()
     return He3Polarization[Cell](polarization(time,**popt))
