@@ -313,8 +313,18 @@ def he3_opacity_from_beam_data(
     Note that this can alternatively be computed from cell parameters, see
     :py:func:`he3_opacity_from_cell_params`.
     """
+    """
+    direct_beam_cell, and direct_beam = data arrays with wavelength information
+    --> the result of eq. 1 down would give O for these different wavelength. 
+    --> that can be either averaged/concatenated
+    --> or O is fit to eq. 2
+   eq1: He3Opacity[Cell] = -sc.log[direct_beam_cell/direct_beam*1/transmission_empty_glass]
+   eq2: direct_beam_cell = direct_beam*transmission_empty_glass*sc.exp(-He3Opacity[Cell])
+   --> But : that might still give different values of O for different wavelength? As Simon how to fit to all data simulatneously
+    """
+
     raise NotImplementedError()
-    return He3Opacity[Cell](1)
+    return He3Opacity[Cell](-sc.log[direct_beam_cell/direct_beam*1/transmission_empty_glass])
 
 
 def he3_polarization(
