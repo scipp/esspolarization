@@ -321,31 +321,9 @@ def he3_opacity_from_beam_data(
     :py:func:`he3_opacity_from_cell_params`.
     """
     """
-    direct_beam_cell, and direct_beam = data arrays with wavelength information
-    --> the result of eq. 1 down would give O for these different wavelength.
-    --> that can be either averaged/concatenated
-    --> or O is fit to eq. 2
-   eq1: He3Opacity[Cell] = -sc.log[direct_beam_cell/direct_beam*1/transmission_empty_glass]
-   eq2: Intensity_direct_beam_cell = direct_beam*transmission_empty_glass*sc.exp(-He3Opacity[Cell])
-
-   --> But : that might still give different values of O for different wavelength? As Simon how to fit to all data simulatneously
-       
-       popt, pcov = sc.curve_fit(['time'], reduce_dims=('wavelength'), Intensity_direct_beam_cell, direct_beam_cell)
-       
-    # from scipp: curve_fit(['x'], func, da, p0 = {'b': 1.0 / sc.Unit('m')})
-    # Do this at 1AA, or just for all wavelength?
-    # Would it be better to (i) take a mean popt for all wavelength, or (ii) compute it just for one wavelength, or (iii) have single parameters for all wavelength?
-    # Maybe can use reduce_dims=['wavelength'] of the scipp.curve_fit (see example)
-
-    reduce_dims (Sequence[str], default: ()) 
-    --> Additional dimensions to aggregate while fitting. 
-    If a dimension is not in reduce_dims, or in the dimensions of the coords used in the fit, 
-    then the values of the optimal parameters will depend on that dimension. 
-    ne fit will be performed for every slice, and the data arrays in the output will have the dimension in their dims. 
-    If a dimension is passed to reduce_dims all data in that dimension is instead aggregated in a single fit 
-    and the dimension will not be present in the output.
+    Discussion with Hal:
+    We can compute the same opacity for all wavelength by fitting a value that fits to all measurements. - This is done by "reduce_dims"?
     """
-
     raise NotImplementedError()
     return He3Opacity[Cell](popt)
 
