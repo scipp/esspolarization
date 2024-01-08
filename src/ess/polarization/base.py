@@ -298,8 +298,12 @@ def he3_opacity_from_cell_params(
     Note that this can alternatively be computed from neutron beam data, see
     :py:func:`he3_opacity_from_beam_data`.
     """
+    """
+    Note: as the opacity from beamdata (see below) now has been defined to yield only the wavelength-independent part,
+    this has to be done here the same!
+    """
     # TODO What is this magic number?
-    return He3Opacity[Cell](0.07733 * pressure * cell_length * wavelength)
+    return He3Opacity[Cell](0.07733 * pressure * cell_length)
 
 
 def he3_opacity_from_beam_data(
@@ -307,14 +311,25 @@ def he3_opacity_from_beam_data(
     direct_beam: DirectBeamNoCell,
     direct_beam_cell: He3DirectBeam[Cell, Depolarized],
 ) -> He3Opacity[Cell]:
+    
+    def Intensity_direct_beam_cell(time, opacity_cell):
+        return direct_beam*transmission_empty_glass*sc.exp(-opacity_cell)
+    
+    popt, pcov = sc.curve_fit(['time'], reduce_dims = ['wavelength'], Intensity_direct_beam_cell, direct_beam_cell)
+    # Q: correct to use 'time' on x-axis?
+    # expected output: popt = opacity = single parameter for each cell, wavelength independent
     """
     Opacity for a given cell, based on direct beam data.
 
     Note that this can alternatively be computed from cell parameters, see
     :py:func:`he3_opacity_from_cell_params`.
     """
+    """
+    Discussion with Hal:
+    We can compute the same opacity for all wavelength by fitting a value that fits to all measurements. - This is done by "reduce_dims"?
+    """
     raise NotImplementedError()
-    return He3Opacity[Cell]()
+    return He3Opacity[Cell](popt)
 
 
 def he3_polarization(
