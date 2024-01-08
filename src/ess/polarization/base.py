@@ -372,6 +372,9 @@ def he3_transmission(
 
     This is computed from the opacity and polarization.
     """
+    T_up = transmission_empty_glass*sc.exp(-opacity*wavelength+opacity*wavelength*polarization)
+    T_down = transmission_empty_glass*sc.exp(-opacity*wavelength-opacity*wavelength*polarization)
+    return T_up, T_down
     raise NotImplementedError()
 
 
