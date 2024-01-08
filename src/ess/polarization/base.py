@@ -366,7 +366,9 @@ def he3_transmission(
     opacity: He3Opacity[Cell],
     polarization: He3Polarization[Cell],
     transmission_empty_glass: He3TransmissionEmptyGlass[Cell],
-) -> He3Transmission[Cell]:
+    transmission_polarizer: He3Transmission[Polarizer],
+    transmission_analyzer: He3Transmission[Analyzer],
+    ) -> He3Transmission[Cell]:
     """
     Transmission for a given cell.
 
@@ -374,7 +376,9 @@ def he3_transmission(
     """
     T_up = transmission_empty_glass*sc.exp(-opacity*wavelength+opacity*wavelength*polarization)
     T_down = transmission_empty_glass*sc.exp(-opacity*wavelength-opacity*wavelength*polarization)
-    return T_up, T_down
+    transmission_polarizer = np.array([[T_up, 0, T_down, 0], [0, T_up, 0, T_down], [T_down, 0, T_up, 0], [0, T_down, 0, T_up]])
+    transmission_analyzer = np.array([[T_up, T_down, 0, 0], [T_down, T_up, 0, 0], [0, 0, T_up, T_down], [0, 0, T_down, T_up]])
+    return He3Transmission[Cell]()
     raise NotImplementedError()
 
 
