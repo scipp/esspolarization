@@ -322,32 +322,63 @@ def he3_polarization(
     direct_beam_polarized: He3DirectBeam[Cell, Polarized],
     opacity: He3Opacity[Cell],
     filling_time: He3FillingTime[Cell],
+    wavelength: WavelengthBins,
     transmission_empty_glass: He3TransmissionEmptyGlass[Cell],
+
+    # TODO: not needed for the calculation, but still for readout of cell parameters and referring T1 and PHe0 to correct cell/day - how to do this?
+
 ) -> He3Polarization[Cell]:
     """
     Fit time- and wavelength-dependent equation and return the fit param P(t).
-
     DB_pol/DB = T_E * cosh(O(lambda)*P(t))*exp(-O(lambda))
     """
+    def polarization(time, P_He0, T1):
+        return P_He0*np.exp(-time/T1)
+
+    def Intensity_DB_polarized(time, P_He0, T1):    
+        return direct_beam_no_cell*transmission_empty_glass*np.exp(-opacity*wavelength)*np.cosh(opacity*wavelength*polarization(time, P_He0, T1))
+      
     # Each time bin corresponds to a direct beam measurement. Take the mean for each
     # but keep the time binning.
     # time_up = direct_beam_up.bins.coords['time'].bins.mean()
     # time_down = direct_beam_down.bins.coords['time'].bins.mean()
-    # results dims: spin state, wavelength, time
+
+    popt, pcov = sc.curve_fit(['time'], reduce_dims=['wavelength'], Intensity_DB_polarized, direct_beam_polarized)
+    # from scipp: curve_fit(['x'], func, da, p0 = {'b': 1.0 / sc.Unit('m')})
+    # Result independent of wavelength
+    # results dims: time
+
+    """After discussion with Hal Lee:
+    As the result should be wavelength-independent, and we want to fit one P(t) for all wavelength-binned data of one cell, 
+    reduce_dims should do what we need.
+    Do the same for the opacity (different branch) 
+    --> goal: get one value of opacity for all wavelength-binned data of one cell, 
+    then use O(wavelength-independent, fitted)*wavelength instead for further calculations.
+    --> hence, have substituted the wavelength-dependent opacity here by O(wavelength-independent, fitted)*wavelength, and will calculate
+    a wavelength-independent O in the equation opacity-from-beam-data as well.
+    """
+
     raise NotImplementedError()
-    return He3Polarization[Cell](1)
+    return He3Polarization[Cell](polarization(time,**popt))
 
 
 def he3_transmission(
     opacity: He3Opacity[Cell],
     polarization: He3Polarization[Cell],
     transmission_empty_glass: He3TransmissionEmptyGlass[Cell],
-) -> He3Transmission[Cell]:
+    transmission_polarizer: He3Transmission[Polarizer],
+    transmission_analyzer: He3Transmission[Analyzer],
+    ) -> He3Transmission[Cell]:
     """
     Transmission for a given cell.
 
     This is computed from the opacity and polarization.
     """
+    T_up = transmission_empty_glass*sc.exp(-opacity*wavelength+opacity*wavelength*polarization)
+    T_down = transmission_empty_glass*sc.exp(-opacity*wavelength-opacity*wavelength*polarization)
+    transmission_polarizer = np.array([[T_up, 0, T_down, 0], [0, T_up, 0, T_down], [T_down, 0, T_up, 0], [0, T_down, 0, T_up]])
+    transmission_analyzer = np.array([[T_up, T_down, 0, 0], [T_down, T_up, 0, 0], [0, 0, T_up, T_down], [0, 0, T_down, T_up]])
+    return He3Transmission[Cell]()
     raise NotImplementedError()
 
 
