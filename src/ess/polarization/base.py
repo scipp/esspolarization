@@ -37,7 +37,10 @@ class He3Polarization(sl.Scope[Cell, sc.DataArray], sc.DataArray):
 
 
 class He3Transmission(sl.Scope[Cell, sc.DataArray], sc.DataArray):
-    """Wavelength- and time-dependent transmission for a given cell."""
+    """Wavelength- and time-dependent transmission scalar values for a given cell."""
+
+class He3TransmissionMatrix(sl.Scope[Cell, sc.DataArray], sc.DataArray):
+    """Wavelength- and time-dependent transmission matrix for a given cell."""
 
 
 class He3CellPressure(sl.Scope[Cell, sc.Variable], sc.Variable):
@@ -366,8 +369,6 @@ def he3_transmission(
     opacity: He3Opacity[Cell],
     polarization: He3Polarization[Cell],
     transmission_empty_glass: He3TransmissionEmptyGlass[Cell],
-    transmission_polarizer: He3Transmission[Polarizer],
-    transmission_analyzer: He3Transmission[Analyzer],
     ) -> He3Transmission[Cell]:
     """
     Transmission for a given cell.
@@ -376,10 +377,32 @@ def he3_transmission(
     """
     T_up = transmission_empty_glass*sc.exp(-opacity*wavelength+opacity*wavelength*polarization)
     T_down = transmission_empty_glass*sc.exp(-opacity*wavelength-opacity*wavelength*polarization)
-    transmission_polarizer = np.array([[T_up, 0, T_down, 0], [0, T_up, 0, T_down], [T_down, 0, T_up, 0], [0, T_down, 0, T_up]])
-    transmission_analyzer = np.array([[T_up, T_down, 0, 0], [T_down, T_up, 0, 0], [0, 0, T_up, T_down], [0, 0, T_down, T_up]])
-    return He3Transmission[Cell]()
+    return He3Transmission[Cell](T_up, T_down)
     raise NotImplementedError()
+    """
+    Questions: 
+    - what would it return? The two matrices?
+    - Usage on data (see below)? Will then calling He3Transmission[Polarizer]mcall the matrix?
+    """
+def he3_transmission_matrix_polarizer(
+        t_up_down:He3Transmission[Polarizer]
+) -> He3TransmissionMatrix[Polarizer]:
+    """
+    transmission_matrix_polarizer = np.array([[T_up, 0, T_down, 0], [0, T_up, 0, T_down], [T_down, 0, T_up, 0], [0, T_down, 0, T_up]])
+    transmission_matrix_analyzer = np.array([[T_up, T_down, 0, 0], [T_down, T_up, 0, 0], [0, 0, T_up, T_down], [0, 0, T_down, T_up]])
+    """
+    T_up, T_down = t_up_down
+    return He3TransmissionMatrix[Polarizer](np.array([[T_up, 0, T_down, 0], [0, T_up, 0, T_down], [T_down, 0, T_up, 0], [0, T_down, 0, T_up]]))
+
+def he3_transmission_matrix_analyzer(
+        t_up_down:He3Transmission[Analyzer]
+) -> He3TransmissionMatrix[Analyzer]:
+    """
+    transmission_matrix_polarizer = np.array([[T_up, 0, T_down, 0], [0, T_up, 0, T_down], [T_down, 0, T_up, 0], [0, T_down, 0, T_up]])
+    transmission_matrix_analyzer = np.array([[T_up, T_down, 0, 0], [T_down, T_up, 0, 0], [0, 0, T_up, T_down], [0, 0, T_down, T_up]])
+    """
+    T_up, T_down = t_up_down
+    return He3TransmissionMatrix[Analyzer](np.array([[T_up, T_down, 0, 0], [T_down, T_up, 0, 0], [0, 0, T_up, T_down], [0, 0, T_down, T_up]]))
 
 
 class ReducedSampleDataBySpinChannel(
@@ -443,8 +466,8 @@ def correct_sample_data_for_polarization(
     updown: ReducedSampleDataBySpinChannel[Up, Down],
     downup: ReducedSampleDataBySpinChannel[Down, Up],
     downdown: ReducedSampleDataBySpinChannel[Down, Down],
-    transmission_polarizer: He3Transmission[Polarizer],
-    transmission_analyzer: He3Transmission[Analyzer],
+    transmission_matrix_polarizer: He3TransmissionMatrix[Polarizer],
+    transmission_matrix_analyzer: He3TransmissionMatrix[Analyzer],
 ) -> PolarizationCorrectedSampleData:
     """
     Apply polarization correction for the case of He3 polarizers and analyzers.
@@ -453,6 +476,17 @@ def correct_sample_data_for_polarization(
     case, since transmission is not time-dependent but spin-flippers need to be
     accounted for.
     """
+
+    data = np.array(upup, updown, downup, downdown)
+    data_corrected = np.matmul(np.matmul(transmission_matrix_analyzer,transmission_matrix_polarizer),data)
+    #--> ((4,4)*(4,4))*(4,1) = (4,1)?
+    # QUESTION: is following correct?
+
+    data_corrected_upup = data_corrected[0]
+    data_corrected_updown = data_corrected[1]
+    data_corrected_downup = data_corrected[2]
+    data_corrected_downdown = data_corrected[3]
+
     # 1. Apply polarization correction (matrix inverse)
     # 2. Compute weighted mean over time and wavelength, bin into Q-bins
 
