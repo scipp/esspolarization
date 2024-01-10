@@ -318,13 +318,11 @@ def he3_opacity_from_beam_data(
 
 
 def he3_polarization(
-    direct_beam_no_cell: DirectBeamNoCell,
-    direct_beam_polarized: He3DirectBeam[Cell, Polarized],
-    opacity: He3Opacity[Cell],
-    filling_time: He3FillingTime[Cell],
+    I0: DirectBeamNoCell,
+    I: He3DirectBeam[Cell, Polarized],
+    O_0: He3Opacity[Cell],
     wavelength: WavelengthBins,
-    transmission_empty_glass: He3TransmissionEmptyGlass[Cell],
-
+    Tg: He3TransmissionEmptyGlass[Cell],
     # TODO: not needed for the calculation, but still for readout of cell parameters and referring T1 and PHe0 to correct cell/day - how to do this?
 
 ) -> He3Polarization[Cell]:
@@ -332,18 +330,19 @@ def he3_polarization(
     Fit time- and wavelength-dependent equation and return the fit param P(t).
     DB_pol/DB = T_E * cosh(O(lambda)*P(t))*exp(-O(lambda))
     """
-    def polarization(time, P_He0, T1):
-        return P_He0*np.exp(-time/T1)
+    def polarization(time, C, T1):
+        return C*sc.exp(-time/T1)
 
-    def Intensity_DB_polarized(time, P_He0, T1):    
-        return direct_beam_no_cell*transmission_empty_glass*np.exp(-opacity*wavelength)*np.cosh(opacity*wavelength*polarization(time, P_He0, T1))
-      
+    I_div=I/I0
+    def Intensity_DB_polarized(time, wavelength, C, T1):         
+        return Tg*sc.exp(-O_0*wavelength)*sc.cosh(O_0*wavelength*polarization(time, C, T1))
+     
     # Each time bin corresponds to a direct beam measurement. Take the mean for each
     # but keep the time binning.
     # time_up = direct_beam_up.bins.coords['time'].bins.mean()
     # time_down = direct_beam_down.bins.coords['time'].bins.mean()
 
-    popt, pcov = sc.curve_fit(['time'], reduce_dims=['wavelength'], Intensity_DB_polarized, direct_beam_polarized)
+    popt, pcov = sc.curve_fit(['time', 'wavelength'], Intensity_DB_polarized, I_div)
     # from scipp: curve_fit(['x'], func, da, p0 = {'b': 1.0 / sc.Unit('m')})
     # Result independent of wavelength
     # results dims: time
