@@ -303,16 +303,17 @@ def he3_opacity_from_cell_params(
 
 
 def he3_opacity_from_beam_data(
-    transmission_empty_glass: He3TransmissionEmptyGlass[Cell],
-    direct_beam: DirectBeamNoCell,
-    direct_beam_cell: He3DirectBeam[Cell, Depolarized],
+    Tg: He3TransmissionEmptyGlass[Cell],
+    I0: DirectBeamNoCell,
+    Idepol: He3DirectBeam[Cell, Depolarized],
 ) -> He3Opacity[Cell]:
     
-    def Intensity_direct_beam_cell(time, opacity_cell):
-        return direct_beam*transmission_empty_glass*sc.exp(-opacity_cell)
+    def Intensity_direct_beam_cell(wavelength, O_0):
+        return Tg*sc.exp(-O_0*wavelength)
     
-    popt, pcov = sc.curve_fit(['time'], reduce_dims = ['wavelength'], Intensity_direct_beam_cell, direct_beam_cell)
-    # Q: correct to use 'time' on x-axis?
+    I_div = Idepol/I0
+    popt, pcov = sc.curve_fit(['wavelength'], Intensity_direct_beam_cell, I_div)  
+
     # expected output: popt = opacity = single parameter for each cell, wavelength independent
     """
     Opacity for a given cell, based on direct beam data.
