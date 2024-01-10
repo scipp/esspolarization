@@ -290,7 +290,6 @@ def direct_beam_with_cell(
 def he3_opacity_from_cell_params(
     pressure: He3CellPressure[Cell],
     cell_length: He3CellLength[Cell],
-    wavelength: WavelengthBins,
 ) -> He3Opacity[Cell]:
     """
     Opacity for a given cell, based on pressure and cell length.
