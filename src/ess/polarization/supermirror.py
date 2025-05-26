@@ -2,6 +2,7 @@
 # Copyright (c) 2023 Scipp contributors (https://github.com/scipp)
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Generic
 
@@ -14,9 +15,11 @@ from .types import PlusMinus, PolarizingElement, TransmissionFunction
 class SupermirrorEfficiencyFunction(Generic[PolarizingElement], ABC):
     """Base class for supermirror efficiency functions"""
 
+    coords: Sequence[str]
+
     @abstractmethod
     def __call__(self, *, wavelength: sc.Variable) -> sc.DataArray:
-        """Return the efficiency of a supermirror for a given wavelength"""
+        """Return the efficiency of a supermirror for the given coordinates"""
 
 
 @dataclass
@@ -41,6 +44,7 @@ class SecondDegreePolynomialEfficiency(
     a: sc.Variable
     b: sc.Variable
     c: sc.Variable
+    coords = ('wavelength',)
 
     def __call__(self, *, wavelength: sc.Variable) -> sc.DataArray:
         """Return the efficiency of a supermirror for a given wavelength"""
@@ -69,7 +73,10 @@ class SupermirrorTransmissionFunction(TransmissionFunction[PolarizingElement]):
 
     def apply(self, data: sc.DataArray, plus_minus: PlusMinus) -> sc.DataArray:
         """Apply the transmission function to a data array"""
-        return self(wavelength=data.coords['wavelength'], plus_minus=plus_minus)
+        return self(
+            **{coord: data.coords[coord] for coord in self.efficiency_function.coords},
+            plus_minus=plus_minus,
+        )
 
 
 def get_supermirror_transmission_function(
