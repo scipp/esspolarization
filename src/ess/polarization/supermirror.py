@@ -52,6 +52,25 @@ class SecondDegreePolynomialEfficiency(
 
 
 @dataclass
+class EfficiencyLookupTable(SupermirrorEfficiencyFunction[PolarizingElement]):
+    """
+    Efficiency of a supermirror as a lookup table.
+    The names of the columns in the table has to be "wavelength", "efficiency".
+
+    Parameters
+    ----------
+    table:
+        The lookup table.
+    """
+
+    table: sc.DataArray
+
+    def __call__(self, *, wavelength: sc.Variable) -> sc.DataArray:
+        """Return the efficiency of a supermirror for a given wavelength"""
+        return sc.lookup(sc.values(self.table), 'wavelength')(wavelength)
+
+
+@dataclass
 class SupermirrorTransmissionFunction(TransmissionFunction[PolarizingElement]):
     """Wavelength-dependent transmission of a supermirror"""
 
