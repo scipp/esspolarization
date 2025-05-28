@@ -88,11 +88,7 @@ class SupermirrorTransmissionFunction(TransmissionFunction[PolarizingElement]):
 
     def apply(self, data: sc.DataArray, plus_minus: PlusMinus) -> sc.DataArray:
         """Apply the transmission function to a data array"""
-        wavelength = data.coords['wavelength']
-        # if wavelength.ndims == 1:
-        #    if data.coords['wavelength'].size == data.sizes[wavelength.dim] + 1:
-        #        wavelength = sc.midpoints(wavelength)
-        return self(wavelength=wavelength, plus_minus=plus_minus)
+        return self(wavelength=data.coords['wavelength'], plus_minus=plus_minus)
 
 
 def get_supermirror_transmission_function(
