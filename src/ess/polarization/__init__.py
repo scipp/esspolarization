@@ -35,6 +35,7 @@ from .he3 import (
     Polarized,
 )
 from .supermirror import (
+    EfficiencyLookupTable,
     SecondDegreePolynomialEfficiency,
     SupermirrorEfficiencyFunction,
     SupermirrorWorkflow,
