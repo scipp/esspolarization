@@ -3,7 +3,8 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Generic
+from pathlib import Path
+from typing import IO, Generic
 
 import sciline
 import scipp as sc
@@ -68,6 +69,28 @@ class EfficiencyLookupTable(SupermirrorEfficiencyFunction[PolarizingElement]):
     def __call__(self, *, wavelength: sc.Variable) -> sc.DataArray:
         """Return the efficiency of a supermirror for a given wavelength"""
         return sc.lookup(sc.values(self.table), 'wavelength')(wavelength)
+
+    @classmethod
+    def from_file(
+        cls,
+        path: str | Path | IO,
+        wavelength_colname,
+        efficiency_colname,
+        wavelength_unit='angstrom',
+    ):
+        ds = sc.io.load_csv(path)
+        return cls(
+            sc.DataArray(
+                sc.array(dims=('wavelength',), values=ds[efficiency_colname].values),
+                coords={
+                    'wavelength': sc.array(
+                        dims=('wavelength',),
+                        values=ds[wavelength_colname].values,
+                        unit=wavelength_unit,
+                    )
+                },
+            )
+        )
 
 
 @dataclass
