@@ -275,5 +275,7 @@ linkcheck_ignore = [
 # -- Redirect to new docs --------------------------------------------------
 
 redirects = {
-    "*": "https://scipp.github.io/ess/polarization/$source.html",
+    "*": "https://scipp.github.io/ess/reduce/$source.html",
+    "generated/*": "https://scipp.github.io/ess/reduce/api-reference/index.html",
+    "user-guide/*": "https://scipp.github.io/ess/reduce/user-guide/polarization/index.html",
 }
