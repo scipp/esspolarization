@@ -10,5 +10,6 @@ sphinx
 sphinx-autodoc-typehints
 sphinx-copybutton
 sphinx-design
+sphinx-reredirects
 sphinxcontrib-mermaid
 sympy

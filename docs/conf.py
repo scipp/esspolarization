@@ -32,6 +32,7 @@ extensions = [
     'sphinx_autodoc_typehints',
     'sphinx_copybutton',
     'sphinx_design',
+    'sphinx_reredirects',
     'sphinxcontrib.mermaid',
     'sphinxcontrib.autodoc_pydantic',
     'nbsphinx',
@@ -270,3 +271,11 @@ linkcheck_ignore = [
     r'https?://doi\.org/',
     r'https?://dx\.doi\.org/',
 ]
+
+# -- Redirect to new docs --------------------------------------------------
+
+redirects = {
+    "*": "https://scipp.github.io/ess/reduce/$source.html",
+    "generated/*": "https://scipp.github.io/ess/reduce/api-reference/index.html",
+    "user-guide/*": "https://scipp.github.io/ess/reduce/user-guide/polarization/index.html",
+}
